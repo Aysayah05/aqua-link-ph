@@ -51,7 +51,7 @@ class AppRouter {
     }
     switch (auth.status) {
       case AuthStatus.uninitialized:
-        return const _SplashGate();
+        return _SplashGate(message: auth.statusMessage);
       case AuthStatus.unauthenticated:
         return const LoginScreen();
       case AuthStatus.authenticated:
@@ -62,7 +62,9 @@ class AppRouter {
 
   static Widget _portalFor(AuthProvider auth) {
     final String? role = auth.profile?.role;
-    if (!auth.isSignedIn || role == null) return const _SplashGate();
+    if (!auth.isSignedIn || role == null) {
+      return _SplashGate(message: auth.statusMessage);
+    }
     switch (role) {
       case Roles.admin:
         return const AdminShell();
@@ -89,7 +91,8 @@ class AppRouter {
 }
 
 class _SplashGate extends StatefulWidget {
-  const _SplashGate();
+  const _SplashGate({this.message});
+  final String? message;
 
   @override
   State<_SplashGate> createState() => _SplashGateState();
@@ -133,8 +136,14 @@ class _SplashGateState extends State<_SplashGate> with SingleTickerProviderState
             const SizedBox(height: 22),
             Text('Aqua Link PH', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
-            const Text('Edelycalie Water Refilling Station'),
-            const SizedBox(height: 32),
+            const             Text('Edelycalie Water Refilling Station'),
+            const SizedBox(height: 18),
+            Text(
+              widget.message ?? 'Preparing…',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF8CA0BF)),
+            ),
+            const SizedBox(height: 18),
             const SizedBox(width: 30, height: 30, child: CircularProgressIndicator(strokeWidth: 2.5)),
           ],
         ),
