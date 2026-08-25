@@ -1,0 +1,144 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && userRole() == 'admin';
+    }
+
+    function isStaff() {
+      return signedIn() && userRole() == 'staff';
+    }
+
+    function isOperational() {
+      return isAdmin() || isStaff();
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin() || isStaff();
+
+      // Self-registration: a new account may create its own customer profile.
+      allow create: if isSelf(uid) && request.resource.data.role == 'customer';
+
+      // One-time bootstrap: first registered customer may elevate themselves
+      // to admin only while no admin exists (guarded by /config/bootstrap).
+      allow update: if isAdmin()
+        || (isSelf(uid)
+            && resource.data.role == 'customer'
+            && request.resource.data.role == 'admin'
+            && get(/databases/$(database)/documents/config/bootstrap).data.adminClaimed != true);
+
+      allow delete: if false;
+
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // ---------- config ----------
+    match /config/bootstrap {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update: if signedIn() && resource.data.adminClaimed != true;
+      allow delete: if false;
+    }
+
+    // ---------- customers ----------
+    match /customers/{customerId} {
+      allow read: if isAdmin() || isStaff()
+        || (signedIn() && customerId == request.auth.uid);
+      // Customers keep their own profile in sync (name/phone/address edits).
+      allow update: if isAdmin()
+        || (isStaff())
+        || (isSelf(customerId) && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin() || isStaff() || (signedIn() && customerId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ---------- orders ----------
+    match /orders/{orderId} {
+      allow read: if isAdmin() || isStaff()
+        || (resource.data.userId != null && isSelf(resource.data.userId));
+
+      allow create: if isAdmin() || isStaff()
+        || (isSelf(request.resource.data.userId)
+            && request.resource.data.status == 'pending'
+            && request.resource.data.paymentStatus == 'unpaid');
+
+      allow update: if isAdmin() || isStaff()
+        || (isSelf(resource.data.userId)
+            && resource.data.status == 'pending'
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'driverNearby', 'updatedAt']));
+      allow delete: if isAdmin();
+
+      // Customer cancel path writes only status/driverNearby/updatedAt fields.
+      // Staff/admin can update everything operational (status, payment...).
+    }
+
+    // ---------- gallons ----------
+    match /gallons/{gallonId} {
+      allow read: if isAdmin() || isStaff()
+        || (signedIn() && resource.data.currentCustomerId == request.auth.uid);
+      allow create: if isAdmin() || isStaff();
+      allow update: if isAdmin() || isStaff();
+      allow delete: if isAdmin();
+
+      match /history/{entryId} {
+        allow read: if isAdmin() || isStaff()
+          || (signedIn() && get(/databases/$(database)/documents/gallons/$(gallonId)).data.currentCustomerId == request.auth.uid);
+        allow write: if isAdmin() || isStaff();
+      }
+    }
+
+    // ---------- inventory ----------
+    match /inventory/{itemId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin() || isStaff();
+    }
+
+    // ---------- sales (financial records) ----------
+    match /sales/{saleId} {
+      allow read: if isAdmin() || isStaff()
+        || (signedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isAdmin() || isStaff();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ---------- expenses (admin-only financial data) ----------
+    match /expenses/{expenseId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{notificationId} {
+      allow read: if isSelf(resource.data.userId) || isAdmin() || isStaff();
+      allow create: if isAdmin() || isStaff();
+      // Recipient can mark their own notifications as read.
+      allow update: if isSelf(resource.data.userId) || isAdmin() || isStaff();
+      allow delete: if isAdmin() || isStaff();
+    }
+
+    // ---------- deny everything else ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
