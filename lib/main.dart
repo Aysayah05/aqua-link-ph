@@ -28,6 +28,10 @@ Future<void> main() async {
     if (configured) {
       await Firebase.initializeApp(
           options: fb_options.DefaultFirebaseOptions.currentPlatform);
+      try {
+        FirebaseFirestore.instance.settings =
+            const Settings(persistenceEnabled: true);
+      } catch (_) {}
     }
   } catch (_) {
     configured = false;

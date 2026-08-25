@@ -41,7 +41,21 @@ class AuthProvider extends ChangeNotifier {
 
   void init() {
     _authSub?.cancel();
-    _authSub = _authService.authStateChanges.listen(_onAuthChanged);
+    _authSub = _authService.authStateChanges.listen(
+      _onAuthChanged,
+      onError: (Object e) {
+        errorMessage = 'Authentication connection failed. Check your internet or disable ad-blockers.';
+        profile = null;
+        status = AuthStatus.unauthenticated;
+        notifyListeners();
+      },
+    );
+    Timer(const Duration(seconds: 8), () {
+      if (status == AuthStatus.uninitialized) {
+        status = AuthStatus.unauthenticated;
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> _onAuthChanged(User? user) async {
