@@ -25,11 +25,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_API_KEY',
-    appId: 'YOUR_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyCJ_XBINyRIeQ8ytAsK-g5ubGOnyPsZNS8',
+    appId: '1:1048068807394:web:f003e1ab05539a1ae7dcbb',
+    messagingSenderId: '1048068807394',
+    projectId: 'aqua-link-ph',
+    authDomain: 'aqua-link-ph.firebaseapp.com',
+    storageBucket: 'aqua-link-ph.firebasestorage.app',
+    measurementId: 'G-KFGCLFCRQX',
   );
 }
