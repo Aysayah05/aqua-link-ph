@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import '../screens/admin/admin_shell.dart';
@@ -6,7 +7,18 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/customer/customer_shell.dart';
 import '../screens/error/access_denied_screen.dart';
+import '../screens/error/firebase_config_screen.dart';
 import '../screens/staff/staff_shell.dart';
+
+class RootGate extends StatelessWidget {
+  const RootGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final AuthProvider auth = context.watch<AuthProvider>();
+    return AppRouter.rootFor(auth);
+  }
+}
 
 class AppRouter {
   AppRouter._();
@@ -27,7 +39,7 @@ class AppRouter {
         page = _guard(auth, LoginScreen(), null);
         break;
       case register:
-        page = _guard(auth, RegisterScreen(), Roles.customer);
+        page = _guard(auth, RegisterScreen(), null);
         break;
       case admin:
         page = _guard(auth, const AdminShell(), Roles.admin);
@@ -40,22 +52,20 @@ class AppRouter {
         break;
       case splash:
       default:
-        page = _root(auth);
+        page = const RootGate();
     }
     return MaterialPageRoute<dynamic>(settings: settings, builder: (_) => page);
   }
 
-  static Widget _root(AuthProvider auth) {
-    if (auth.status == AuthStatus.misconfigured) {
-      return const SizedBox.shrink();
-    }
+  static Widget rootFor(AuthProvider auth) {
     switch (auth.status) {
       case AuthStatus.uninitialized:
         return _SplashGate(message: auth.statusMessage);
       case AuthStatus.unauthenticated:
         return const LoginScreen();
-      case AuthStatus.authenticated:
       case AuthStatus.misconfigured:
+        return const FirebaseConfigScreen();
+      case AuthStatus.authenticated:
         return _portalFor(auth);
     }
   }
@@ -78,8 +88,15 @@ class AppRouter {
   }
 
   static Widget _guard(AuthProvider auth, Widget page, String? requiredRole) {
+    if (requiredRole == null) {
+      // Login / Register: signed-in users belong in their portal instead.
+      if (auth.isSignedIn) {
+        return _portalFor(auth);
+      }
+      return page;
+    }
     if (!auth.isSignedIn) return const LoginScreen();
-    if (requiredRole != null && auth.profile!.role != requiredRole) {
+    if (auth.profile!.role != requiredRole) {
       return AccessDeniedScreen(expectedRole: requiredRole);
     }
     return page;

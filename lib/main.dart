@@ -8,7 +8,6 @@ import 'core/theme/app_theme.dart';
 import 'firebase_options.dart' as fb_options;
 import 'providers/auth_provider.dart';
 import 'routes/app_router.dart';
-import 'screens/error/firebase_config_screen.dart';
 
 bool _isFirebaseConfigured(FirebaseOptions options) {
   const List<String> placeholders = [
@@ -61,12 +60,9 @@ class AquaLinkApp extends StatelessWidget {
           title: 'Aqua Link PH',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.dark,
-          scaffoldMessengerKey: GlobalKey<ScaffoldMessengerState>(),
+          home: const RootGate(),
           onGenerateRoute: (RouteSettings settings) => AppRouter.onGenerateRoute(settings, auth),
           builder: (BuildContext context, Widget? child) {
-            if (auth.status == AuthStatus.misconfigured) {
-              return const FirebaseConfigScreen();
-            }
             if (auth.status == AuthStatus.unauthenticated && auth.errorMessage != null) {
               final String message = auth.errorMessage!;
               WidgetsBinding.instance.addPostFrameCallback((_) {
