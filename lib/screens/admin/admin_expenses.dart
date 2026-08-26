@@ -54,22 +54,39 @@ class _AdminExpensesState extends State<AdminExpenses> {
           ]),
           const SizedBox(height: 14),
           LayoutBuilder(builder: (context, c) {
-            final bool sideBySide = c.maxWidth > 950;
-            final Widget summary = Row(children: [
-              Expanded(child: StatCard(label: 'Total · ${AppFormatters.monthYear(now)}', value: AppFormatters.peso(thisMonth), icon: Icons.payments_rounded, color: AppColors.danger)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Card(
-                  child: Padding(padding: const EdgeInsets.all(14), child:
-                    byCat.isEmpty
-                        ? const SizedBox(height: 60, child: Center(child: Text('No expenses yet', style: AppTextStyles.muted)))
-                        : ExpensePieChart(data: byCat),
-                  ),
-                ),
+            final bool sideBySide = c.maxWidth > 900;
+            final Widget totalCard = StatCard(
+                label: 'Total · ${AppFormatters.monthYear(now)}',
+                value: AppFormatters.peso(thisMonth),
+                icon: Icons.payments_rounded,
+                color: AppColors.danger);
+            final Widget pieCard = Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: byCat.isEmpty
+                    ? const SizedBox(
+                        height: 170,
+                        child: Center(child: Text('No expenses recorded this month', style: AppTextStyles.muted)))
+                    : ExpensePieChart(data: byCat),
               ),
+            );
+            if (sideBySide) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(width: 280, child: totalCard),
+                    const SizedBox(width: 12),
+                    Expanded(child: pieCard),
+                  ],
+                ),
+              );
+            }
+            return Column(children: [
+              totalCard,
+              const SizedBox(height: 12),
+              pieCard,
             ]);
-            if (sideBySide) return IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [SizedBox(width: 260, child: summary), Expanded(child: Container())]));
-            return summary;
           }),
           const SizedBox(height: 12),
           Expanded(

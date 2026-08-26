@@ -81,7 +81,7 @@ class _AdminSalesState extends State<AdminSales> {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: cols == 4 ? 3.1 : 2.4,
+              mainAxisExtent: 132,
               children: [
                 StatCard(label: 'Total sales', value: AppFormatters.peso(total), icon: Icons.payments_rounded, color: AppColors.success),
                 StatCard(label: 'Transactions', value: '${inRange.length}', icon: Icons.receipt_rounded, color: AppColors.primary, subtitle: '${inRange.isEmpty ? 0 : (total / inRange.length).toStringAsFixed(0)} avg'),

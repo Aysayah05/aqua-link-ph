@@ -52,7 +52,7 @@ class StaffDashboard extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: cols == 4 ? 3.0 : 2.6,
+                mainAxisExtent: 132,
                 children: [
                   StatCard(label: 'New orders to review', value: '$pending', icon: Icons.notifications_active_rounded, color: AppColors.warning),
                   StatCard(label: 'Being prepared', value: '$preparing', icon: Icons.water_rounded, color: AppColors.primary),

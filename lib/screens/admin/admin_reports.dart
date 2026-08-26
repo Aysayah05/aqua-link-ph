@@ -59,7 +59,7 @@ class _AdminReportsState extends State<AdminReports> {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: cols == 3 ? 2.6 : 2.8,
+                  mainAxisExtent: 132,
                   children: [
                     StatCard(label: "Today's revenue", value: AppFormatters.peso(revenueToday), icon: Icons.today_rounded, color: AppColors.accent),
                     StatCard(label: 'Revenue this month', value: AppFormatters.peso(revenueMonth), icon: Icons.trending_up_rounded, color: AppColors.primary),
